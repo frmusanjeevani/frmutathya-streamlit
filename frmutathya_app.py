@@ -26,17 +26,20 @@ st.markdown("""
         .top-left-logo { left: 10px; }
         .top-right-logo { right: 10px; }
         .user-role-box {
-                 position: absolute;
-    top: 70px;
+    position: absolute;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     background-color: #F5F5F5;
-    padding: 4px 10px;
-    font-size: 13px;
+    padding: 10px 20px;
+    font-size: 14px;
     color: #333;
-    border-radius: 4px;
-    width: 300px; /* adjust as needed */
+    border-radius: 6px;
+    width: 300px;
     text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
         }
         .footer {
             position: fixed; bottom: 5px; left: 10px;
