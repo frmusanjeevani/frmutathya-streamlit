@@ -151,7 +151,6 @@ elif st.session_state.selected_page == "Case Entry":
 
     with col2:
         if st.button("📤 Submit Final"):
-            # Optional: Add validation checks before submission
             if not case_id or not case_description:
                 st.warning("Please fill required fields before submitting.")
             else:
