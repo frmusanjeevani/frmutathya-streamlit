@@ -1,67 +1,79 @@
-import streamlit as st
+""import streamlit as st
+import pandas as pd
 from datetime import datetime
+import sqlite3
 
-# === USER DATABASE ===
-USERS = {
-    "admin": {"password": "admin123", "role": "Admin"},
-    "initiator": {"password": "init123", "role": "Initiator"},
-    "reviewer": {"password": "review123", "role": "Reviewer"},
-    "approver": {"password": "approve123", "role": "Approver"},
-    "legal": {"password": "legal123", "role": "Legal Reviewer"},
-    "closure": {"password": "closure123", "role": "Action Closure Authority"}
-}
+# --- Config ---
+st.set_page_config(page_title="Tathya - Case Management", page_icon="🔎", layout="wide")
 
-# === PAGE CONFIG & STYLING ===
-st.set_page_config(layout="wide")
+# --- Database Init ---
+conn = sqlite3.connect("/mnt/data/tathya_cases.db", check_same_thread=False)
+cursor = conn.cursor()
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS cases (
+        case_id TEXT PRIMARY KEY,
+        customer TEXT,
+        type TEXT,
+        region TEXT,
+        category TEXT,
+        state TEXT,
+        city TEXT,
+        product TEXT,
+        referred_by TEXT,
+        loan_amount REAL,
+        fraud_loss REAL,
+        recovery REAL,
+        date TEXT,
+        description TEXT,
+        reviewer_cat TEXT,
+        reviewer_fraud_type TEXT,
+        reviewer_l1_mgr TEXT,
+        reviewer_l2_mgr TEXT,
+        reviewer_status TEXT,
+        reviewer_pending_stage TEXT,
+        reviewer_remarks TEXT,
+        approver_name TEXT,
+        approver_id TEXT,
+        approver_role TEXT
+    )
+""")
+conn.commit()
+
+# --- Style ---
 st.markdown("""
     <style>
-        .login-container {
-            max-width: 300px;
-            margin: 15vh auto 0 auto;
-            background-color: #fff5e1;
-            padding: 1.5rem;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        body { background-color: #FFF4D9; }
+        .stButton>button {
+            background-color: #C7222A; color: white;
+            border: none; padding: 0.4rem 1rem;
+            font-weight: 600;
         }
-        .menu-box {
-            background-color: #f4f4f4;
-            padding: 8px 14px;
-            margin-bottom: 6px;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 16px;
-            text-transform: uppercase;
-            transition: 0.2s ease;
-            cursor: pointer;
-        }
-        .menu-box:hover {
-            background-color: #e0e0e0;
-        }
-        .menu-active {
-            background-color: #d0d0ce !important;
-        }
-        .logo-link {
-            position: absolute;
-            top: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #C7222A;
-            text-decoration: none;
-            z-index: 999;
-        }
-        .top-left-logo { left: 10px; }
-        .top-right-logo { right: 10px; }
+        .stButton>button:hover { background-color: #8B151B; }
+        .top-left-logo { position: absolute; top: 10px; left: 10px; }
+        .top-right-logo { position: absolute; top: 10px; right: 10px; }
+        .user-role-box { position: absolute; top: 70px; right: 10px; background-color: #F5F5F5;
+            padding: 4px 10px; font-size: 13px; color: #333; border-radius: 4px; }
+        .footer { position: fixed; bottom: 5px; width: 100%; text-align: center; font-size: 13px;
+            color: #888; font-style: italic; }
     </style>
-    <a href="#Dashboard" class="logo-link top-left-logo">🔎 Tathya</a>
-    <a href="https://www.adityabirlacapital.com/" target="_blank" class="logo-link top-right-logo">🏢 ABCL</a>
 """, unsafe_allow_html=True)
 
-# === SESSION & LOGIN ===
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
+st.markdown('<div class="top-left-logo"><img src="https://yourdomain.com/tathya-logo.png" height="60"></div>', unsafe_allow_html=True)
+st.markdown('<div class="top-right-logo"><img src="https://yourdomain.com/abcl-logo.png" height="50"></div>', unsafe_allow_html=True)
+if "role" in st.session_state:
+    st.markdown(f'<div class="user-role-box">Role: {st.session_state["role"]}</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">Powered by <strong>FRMU Sanjeevani</strong></div>', unsafe_allow_html=True)
 
+# --- Users ---
+USERS = {
+    "admin": {"password": "admin123", "role": "Initiator"},
+    "reviewer": {"password": "review123", "role": "Reviewer"},
+    "approver": {"password": "approve123", "role": "Approver"}
+}
+
+# --- Login ---
 def login():
-    st.markdown('<div class="login-container">', unsafe_allow_html=True)
+    st.title("🔐 Tathya Login")
     with st.form("login_form"):
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
@@ -74,214 +86,118 @@ def login():
                 st.rerun()
             else:
                 st.error("Invalid credentials")
-    st.markdown('</div>', unsafe_allow_html=True)
+
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
     login()
     st.stop()
 
-# === SIDEBAR MENU ===
-role = st.session_state.get("role", "Reviewer")
-base_menu = ["Dashboard", "Case Entry", "Analytics"]
+# --- Session Init ---
+role = st.session_state.get("role")
+menu = st.sidebar.radio("📁 Menu", ["Dashboard", "Analytics", "Case Entry", "Reviewer Panel", "Approver Panel"])
+st.sidebar.markdown("<br><br>", unsafe_allow_html=True)
+st.sidebar.button("Logout", on_click=lambda: st.session_state.update({"authenticated": False}))
 
-if role == "Reviewer":
-    base_menu.append("Reviewer Panel")
-elif role == "Approver":
-    base_menu.append("Approver Panel")
-elif role == "Legal Reviewer":
-    base_menu.append("Legal - SCN / Orders")
-elif role == "Action Closure Authority":
-    base_menu.append("Closure Actions")
-elif role == "Admin":
-    base_menu.append("User Admin")
+# --- Masters ---
+reviewer_l1 = ["Aditya Annamraju", "Alphanso Nagalapurkar", "AdAnthuvan Lourdusamy", "Dipesh Makawana", "Goutam Barman", "Jagruti Bane", "K Guruprasath", "Manmeet Singh", "Pramod Kumar", "Ramandeep Singh", "Rohit Shirwadkar", "Shilpy Dua", "Thiyagarajan Shanmugasundaram"]
+reviewer_l2 = ["AdAnthuvan Lourdusamy", "Manmeet Singh", "Ramandeep Singh", "Rohit Shirwadkar", "Suhas Bhalerao"]
+approvers = ["Suhas", "Ajay Kanth"]
+approver_ids = ["10001", "10002"]
+approver_roles = ["Lead-Investigation", "Head-FRMU"]
 
-if "selected_page" not in st.session_state:
-    st.session_state.selected_page = base_menu[0]
+# --- Dashboard ---
+if menu == "Dashboard":
+    st.title("📊 Case Level Dashboard")
+    df = pd.read_sql("SELECT * FROM cases", conn)
+    st.dataframe(df)
 
-st.sidebar.markdown("### 📁 Navigation")
-for item in base_menu:
-    if st.sidebar.button(item, key=item):
-        st.session_state.selected_page = item
-    active_class = "menu-box menu-active" if st.session_state.selected_page == item else "menu-box"
-    st.sidebar.markdown(f'<div class="{active_class}">{item}</div>', unsafe_allow_html=True)
-
-if st.sidebar.button("🚪 Logout"):
-    st.session_state.authenticated = False
-    st.session_state.clear()
-    st.rerun()
-
-# === MAIN CONTENT ===
-st.markdown(f"###: {st.session_state.selected_page}")
-
-if st.session_state.selected_page == "Dashboard":
-    st.success("📊 Dashboard placeholder")
-
-elif st.session_state.selected_page == "Case Entry":
+# --- Case Entry ---
+elif menu == "Case Entry" and role == "Initiator":
     st.subheader("📄 Enter New Case")
-    
-    st.text_input("Case ID")
-    st.selectbox("Type of Case", ["Lending", "Non Lending"])
-    
-    # 🔽 New Field: Product
-    st.selectbox("Product", [
-        "BL", "BTC PL", "DL", "Drop Line LOC", "Finagg", "INSTI - MORTGAGES", "LAP",
-        "Line of Credit", "MLAP", "NA", "PL", "SEG", "SME", "STSL", "STSLP BT + Top - up",
-        "STUL", "Term Loan", "Term Loan Infra", "Udyog Plus", "Unsecured BuyOut"
-    ])
-    
-    st.selectbox("Region", ["East", "North", "South", "West"])
-    
-    # 🔽 New Field: Referred By
-    st.selectbox("Referred By", [
-        "Audit Team", "Business Unit", "Collection Unit", "Compliance Team", "Credit Unit",
-        "Customer Service", "GRT", "HR", "Legal Unit", "MD / CEO Escalation",
-        "Operation Risk Management", "Operation Unit", "Other Function", "Policy Team",
-        "Risk Containment Unit", "Sales Unit", "Technical Team"
-    ])
-    
-    st.text_area("Case Description")
-    st.date_input("Case Date", datetime.today())
-    st.file_uploader("Attach Supporting Document")
-
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("💾 Save Draft"):
-            st.success("✅ Draft saved temporarily (implement logic to save if needed)")
-            # You can add actual save logic to session, file, or database here
-
-    with col2:
-        if st.button("📤 Submit Final"):
-            if not case_id or not case_description:
-                st.warning("Please fill required fields before submitting.")
+    with st.form("case_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            case_id = st.text_input("Case ID")
+            customer = st.text_input("Customer Name")
+            loan_amt = st.number_input("Loan Amount (in Lacs)", 0.0)
+            fraud_loss = st.number_input("Fraud Loss to Company (in Lacs)", 0.0)
+            recovery = st.number_input("RCU Recovery (in Lacs)", 0.0)
+            case_type = st.selectbox("Type of Case", ["Lending", "Non-Lending"])
+            region = st.selectbox("Region", ["East", "West", "North", "South"])
+        with col2:
+            date = st.date_input("Case Date", datetime.today())
+            description = st.text_area("Case Description")
+            category = st.selectbox("Category", ["Fraud", "Non-Fraud", "Under Investigation"])
+            state = st.text_input("State")
+            city = st.text_input("City")
+            product = st.text_input("Product")
+            referred_by = st.text_input("Referred By")
+        submitted = st.form_submit_button("Submit Case")
+        if submitted:
+            if case_id and customer:
+                cursor.execute("""
+                    INSERT INTO cases VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', '', '', '', '', '', '', '', '', '')
+                """, (case_id, customer, case_type, region, category, state, city, product, referred_by, loan_amt, fraud_loss, recovery, str(date), description))
+                conn.commit()
+                st.success("✅ Case added successfully")
             else:
-                st.success("✅ Case submitted successfully!")
+                st.error("All required fields must be filled")
 
-elif st.session_state.selected_page == "Reviewer Panel":
-    st.subheader("📝 Reviewer Panel")
+# --- Reviewer Panel ---
+elif menu == "Reviewer Panel" and role == "Reviewer":
+    st.subheader("🔍 Reviewer Case View")
+    df = pd.read_sql("SELECT * FROM cases", conn)
+    if df.empty:
+        st.warning("No cases available")
+    else:
+        selected = st.selectbox("Select Case", df["case_id"])
+        selected_case = df[df["case_id"] == selected].iloc[0]
+        st.json(selected_case.to_dict())
+        st.markdown("---")
+        st.markdown("### 📝 Reviewer Inputs")
+        with st.form("reviewer_form"):
+            cat = st.selectbox("Case Categorization", ["Fraud", "Non-Fraud", "Under Investigation"])
+            fraud_type = st.selectbox("Fraud/Others Classification", ["Identity Theft"])
+            l1_mgr = st.selectbox("Investigation Manager (L1)", reviewer_l1)
+            l2_mgr = st.selectbox("Investigation Manager (L2)", reviewer_l2)
+            status = st.selectbox("Investigation Status", ["Closed", "Pending"])
+            pending_stage = st.selectbox("Pending Stage", ["SCN Issuance In-progress", "Stage 1 - Awaiting complete case facts/information", "Stage 3 - Investigation Under Progress (L1)", "Stage 4 - Investigation Under Progress (L2)", "Stage 5 - Awaiting NH Review/Approval for IR/FMR"])
+            remarks = st.text_area("Investigation Remarks")
+            submit = st.form_submit_button("Submit Review")
+            if submit:
+                cursor.execute("""
+                    UPDATE cases SET reviewer_cat=?, reviewer_fraud_type=?, reviewer_l1_mgr=?, reviewer_l2_mgr=?,
+                    reviewer_status=?, reviewer_pending_stage=?, reviewer_remarks=? WHERE case_id=?
+                """, (cat, fraud_type, l1_mgr, l2_mgr, status, pending_stage, remarks, selected))
+                conn.commit()
+                st.success("✅ Review submitted")
 
-elif st.session_state.selected_page == "Approver Panel":
-    st.subheader("✅ Approver Panel")
+# --- Approver Panel ---
+elif menu == "Approver Panel" and role == "Approver":
+    st.subheader("🔐 Approver Panel")
+    df = pd.read_sql("SELECT * FROM cases", conn)
+    if df.empty:
+        st.warning("No cases to approve")
+    else:
+        selected = st.selectbox("Select Case", df["case_id"])
+        selected_case = df[df["case_id"] == selected].iloc[0]
+        st.json(selected_case.to_dict())
+        st.markdown("### ✅ Approval Form")
+        with st.form("approver_form"):
+            name = st.selectbox("Approved by Name", approvers)
+            aid = st.selectbox("Approved by ID", approver_ids)
+            arole = st.selectbox("Approved by Role", approver_roles)
+            submit = st.form_submit_button("Submit Approval")
+            if submit:
+                cursor.execute("""
+                    UPDATE cases SET approver_name=?, approver_id=?, approver_role=? WHERE case_id=?
+                """, (name, aid, arole, selected))
+                conn.commit()
+                st.success(f"✅ Approved case {selected}")
 
-elif st.session_state.selected_page == "Legal - SCN / Orders":
-    st.title("📄 Generate Show Cause Notice / Reasoned Order")
-    doc_type = st.selectbox("Select Document Type", ["Show Cause Notice", "Reasoned Order"])
-
-    case_id = st.text_input("Case ID / Incident Name")
-    recipient = st.text_input("Recipient Name and Designation")
-    date_of_issue = st.date_input("Date of Issue", value=datetime.today())
-    ref_no = st.text_input("Notice / Order Number")
-
-    if doc_type == "Show Cause Notice":
-        allegation = st.text_area("Summary of Allegation")
-        evidence = st.text_area("Evidence Summary")
-        legal_ref = st.text_area("Legal Reference (if any)")
-        response_timeline = st.text_input("Response Deadline (e.g., 7 days)")
-        contact_details = st.text_area("Contact for Clarification")
-
-        if st.button("Generate Show Cause Notice"):
-            st.markdown(f"""
-            ### 🛑 Show Cause Notice – {case_id}
-            **To:** {recipient}  
-            **Date:** {date_of_issue.strftime('%d-%m-%Y')}  
-            **Notice No.:** {ref_no}
-
-            **1. Summary of Allegation:**  
-            {allegation}
-
-            **2. Evidence Summary:**  
-            {evidence}
-
-            **3. Legal / Policy Reference:**  
-            {legal_ref}
-
-            **4. Required Response Timeline:**  
-            You are required to respond within **{response_timeline}** from the date of issuance.
-
-            **5. Consequences of Non-Response:**  
-            Failure to respond within the given timeframe may result in appropriate disciplinary action.
-
-            **6. Contact Details for Clarification:**  
-            {contact_details}
-
-            **Issued by:**  
-            [Your Name]  
-            [Your Designation]  
-            Powered by FRMU Sanjeevani
-            """)
-
-    elif doc_type == "Reasoned Order":
-        response_status = st.selectbox("Response Received?", ["Yes", "No"])
-        summary_of_findings = st.text_area("Findings and Evidence Summary")
-        if response_status == "Yes":
-            response_summary = st.text_area("Summary of Respondent’s Reply")
-        else:
-            response_summary = "No response was received from the respondent."
-
-        conclusion = st.text_area("Final Decision")
-        action_taken = st.text_area("Action Taken or Recommended")
-        appeal_rights = st.text_area("Right to Appeal (if any)")
-
-        if st.button("Generate Reasoned Order"):
-            st.markdown(f"""
-            ### 📘 Reasoned Order – {case_id}
-            **To:** {recipient}  
-            **Date:** {date_of_issue.strftime('%d-%m-%Y')}  
-            **Order No.:** {ref_no}
-
-            **1. Background:**  
-            A Show Cause Notice was issued earlier regarding the above-mentioned matter.
-
-            **2. Summary of Charges:**  
-            Referenced under Notice No. {ref_no}.
-
-            **3. Examination of Evidence:**  
-            {summary_of_findings}
-
-            **4. Respondent’s Reply:**  
-            {response_summary}
-
-            **5. Final Decision:**  
-            {conclusion}
-
-            **6. Action Taken:**  
-            {action_taken}
-
-            **7. Right to Appeal:**  
-            {appeal_rights}
-
-            **Issued by:**  
-            [Your Name]  
-            [Your Designation]  
-            Powered by FRMU Sanjeevani
-            """)
-
-elif st.session_state.selected_page == "Closure Actions":
-    st.subheader("🔒 Action Closure Authority Panel")
-    with st.form("closure_form"):
-        st.text_input("Actioner Name")
-        st.selectbox("Department Responsible", ["Business Ops", "Legal", "HR", "IT", "Collections"])
-        st.selectbox("Action Type", [
-            "Clawback", "Recovery", "Police Complaint", "DSA Blacklisting", 
-            "Credit Bureau Suppression", "Partner Notification", 
-            "IT Tagging", "FMR Reporting"
-        ])
-        st.text_area("Action Description")
-        st.selectbox("Action Status", ["Completed", "In Progress", "Not Started", "Escalated"])
-        st.date_input("Action Start Date")
-        st.date_input("Completion Date")
-        st.file_uploader("Supporting Document(s)")
-        st.text_area("Remarks / Justification")
-        if st.selectbox("Escalation Required?", ["No", "Yes"]) == "Yes":
-            st.text_input("Escalated To")
-        st.selectbox("Verification Status", ["Verified", "Pending Verification"])
-        st.text_input("Verified By")
-        st.date_input("Verification Date")
-        st.selectbox("Notification Sent?", ["Yes", "No"])
-        st.selectbox("Final Case Status", ["Closed", "Reopened", "Under Review"])
-
-        if st.form_submit_button("Submit"):
-            st.success("Action closure submitted successfully.")
-
-elif st.session_state.selected_page == "User Admin":
-    st.subheader("👤 Admin Panel")
-    st.info("User management functionality coming soon...")
+# --- Analytics Placeholder ---
+elif menu == "Analytics":
+    st.subheader("📈 Analytics")
+    st.info("Analytics will be added soon with charts and KPIs.")
