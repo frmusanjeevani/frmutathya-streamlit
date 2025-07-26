@@ -26,20 +26,9 @@ st.markdown("""
         .top-left-logo { left: 10px; }
         .top-right-logo { right: 10px; }
         .user-role-box {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #F5F5F5;
-    padding: 10px 20px;
-    font-size: 14px;
-    color: #333;
-    border-radius: 6px;
-    width: 300px;
-    text-align: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
-
+            position: absolute; top: 70px; right: 10px;
+            background-color: #F5F5F5; padding: 4px 10px;
+            font-size: 13px; color: #333; border-radius: 4px;
         }
         .footer {
             position: fixed; bottom: 5px; left: 10px;
@@ -49,7 +38,12 @@ st.markdown("""
             font-family: 'Segoe UI'; color: #C7222A;
             font-weight: bold; font-size: 24px; text-transform: uppercase;
         }
-     }
+        .login-container {
+            max-width: 400px; margin: auto;
+            background-color: #fff5e1; padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
         .css-1d391kg .css-1v0mbdj {
             font-size: 18px !important;
             font-weight: bold !important;
