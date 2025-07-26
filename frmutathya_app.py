@@ -1,7 +1,4 @@
 import streamlit as st
-import uuid
-import os
-import json
 from datetime import datetime
 
 # === USER DATABASE ===
@@ -76,7 +73,7 @@ def login():
                 st.session_state.role = USERS[username]["role"]
                 st.rerun()
             else:
-                st.error("🚫 Incorrect username or password. Please check your credentials and try again.")
+                st.error("Invalid credentials")
     st.markdown('</div>', unsafe_allow_html=True)
 
 if not st.session_state.authenticated:
@@ -114,65 +111,177 @@ if st.sidebar.button("🚪 Logout"):
     st.rerun()
 
 # === MAIN CONTENT ===
-st.markdown(f"### {st.session_state.selected_page}")
+st.markdown(f"###: {st.session_state.selected_page}")
 
 if st.session_state.selected_page == "Dashboard":
     st.success("📊 Dashboard placeholder")
 
 elif st.session_state.selected_page == "Case Entry":
     st.subheader("📄 Enter New Case")
-
-    case_id = st.text_input("Case ID")
-    lan = st.text_input("LAN")
-    case_type = st.selectbox("Type of Case", ["Lending", "Non Lending"])
-
-    product = st.selectbox("Product", [
+    
+    st.text_input("Case ID")
+    st.selectbox("Type of Case", ["Lending", "Non Lending"])
+    
+    # 🔽 New Field: Product
+    st.selectbox("Product", [
         "BL", "BTC PL", "DL", "Drop Line LOC", "Finagg", "INSTI - MORTGAGES", "LAP",
         "Line of Credit", "MLAP", "NA", "PL", "SEG", "SME", "STSL", "STSLP BT + Top - up",
         "STUL", "Term Loan", "Term Loan Infra", "Udyog Plus", "Unsecured BuyOut"
     ])
-
-    region = st.selectbox("Region", ["East", "North", "South", "West"])
-
-    referred_by = st.selectbox("Referred By", [
+    
+    st.selectbox("Region", ["East", "North", "South", "West"])
+    
+    # 🔽 New Field: Referred By
+    st.selectbox("Referred By", [
         "Audit Team", "Business Unit", "Collection Unit", "Compliance Team", "Credit Unit",
         "Customer Service", "GRT", "HR", "Legal Unit", "MD / CEO Escalation",
         "Operation Risk Management", "Operation Unit", "Other Function", "Policy Team",
         "Risk Containment Unit", "Sales Unit", "Technical Team"
     ])
-
-    case_description = st.text_area("Case Description")
-    case_date = st.date_input("Case Date", datetime.today())
+    
+    st.text_area("Case Description")
+    st.date_input("Case Date", datetime.today())
     st.file_uploader("Attach Supporting Document")
 
     col1, col2 = st.columns(2)
     with col1:
         if st.button("💾 Save Draft"):
             st.success("✅ Draft saved temporarily (implement logic to save if needed)")
+            # You can add actual save logic to session, file, or database here
 
     with col2:
         if st.button("📤 Submit Final"):
-            if not case_id.strip() or not lan.strip() or not case_description.strip():
-                st.warning("⚠️ Please fill all required fields (Case ID, LAN, Description) before submitting.")
+            if not case_id or not case_description:
+                st.warning("Please fill required fields before submitting.")
             else:
-                case_data = {
-                    "case_id": case_id,
-                    "lan": lan,
-                    "case_type": case_type,
-                    "product": product,
-                    "region": region,
-                    "referred_by": referred_by,
-                    "case_description": case_description,
-                    "case_date": case_date.strftime("%Y-%m-%d"),
-                    "submitted_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                }
+                st.success("✅ Case submitted successfully!")
 
-                folder_path = "data/cases"
-                os.makedirs(folder_path, exist_ok=True)
+elif st.session_state.selected_page == "Reviewer Panel":
+    st.subheader("📝 Reviewer Panel")
 
-                file_path = os.path.join(folder_path, f"{case_id}.json")
-                with open(file_path, "w") as f:
-                    json.dump(case_data, f, indent=4)
+elif st.session_state.selected_page == "Approver Panel":
+    st.subheader("✅ Approver Panel")
 
-                st.success(f"✅ Case saved successfully as `{case_id}.json`")
+elif st.session_state.selected_page == "Legal - SCN / Orders":
+    st.title("📄 Generate Show Cause Notice / Reasoned Order")
+    doc_type = st.selectbox("Select Document Type", ["Show Cause Notice", "Reasoned Order"])
 
+    case_id = st.text_input("Case ID / Incident Name")
+    recipient = st.text_input("Recipient Name and Designation")
+    date_of_issue = st.date_input("Date of Issue", value=datetime.today())
+    ref_no = st.text_input("Notice / Order Number")
+
+    if doc_type == "Show Cause Notice":
+        allegation = st.text_area("Summary of Allegation")
+        evidence = st.text_area("Evidence Summary")
+        legal_ref = st.text_area("Legal Reference (if any)")
+        response_timeline = st.text_input("Response Deadline (e.g., 7 days)")
+        contact_details = st.text_area("Contact for Clarification")
+
+        if st.button("Generate Show Cause Notice"):
+            st.markdown(f"""
+            ### 🛑 Show Cause Notice – {case_id}
+            **To:** {recipient}  
+            **Date:** {date_of_issue.strftime('%d-%m-%Y')}  
+            **Notice No.:** {ref_no}
+
+            **1. Summary of Allegation:**  
+            {allegation}
+
+            **2. Evidence Summary:**  
+            {evidence}
+
+            **3. Legal / Policy Reference:**  
+            {legal_ref}
+
+            **4. Required Response Timeline:**  
+            You are required to respond within **{response_timeline}** from the date of issuance.
+
+            **5. Consequences of Non-Response:**  
+            Failure to respond within the given timeframe may result in appropriate disciplinary action.
+
+            **6. Contact Details for Clarification:**  
+            {contact_details}
+
+            **Issued by:**  
+            [Your Name]  
+            [Your Designation]  
+            Powered by FRMU Sanjeevani
+            """)
+
+    elif doc_type == "Reasoned Order":
+        response_status = st.selectbox("Response Received?", ["Yes", "No"])
+        summary_of_findings = st.text_area("Findings and Evidence Summary")
+        if response_status == "Yes":
+            response_summary = st.text_area("Summary of Respondent’s Reply")
+        else:
+            response_summary = "No response was received from the respondent."
+
+        conclusion = st.text_area("Final Decision")
+        action_taken = st.text_area("Action Taken or Recommended")
+        appeal_rights = st.text_area("Right to Appeal (if any)")
+
+        if st.button("Generate Reasoned Order"):
+            st.markdown(f"""
+            ### 📘 Reasoned Order – {case_id}
+            **To:** {recipient}  
+            **Date:** {date_of_issue.strftime('%d-%m-%Y')}  
+            **Order No.:** {ref_no}
+
+            **1. Background:**  
+            A Show Cause Notice was issued earlier regarding the above-mentioned matter.
+
+            **2. Summary of Charges:**  
+            Referenced under Notice No. {ref_no}.
+
+            **3. Examination of Evidence:**  
+            {summary_of_findings}
+
+            **4. Respondent’s Reply:**  
+            {response_summary}
+
+            **5. Final Decision:**  
+            {conclusion}
+
+            **6. Action Taken:**  
+            {action_taken}
+
+            **7. Right to Appeal:**  
+            {appeal_rights}
+
+            **Issued by:**  
+            [Your Name]  
+            [Your Designation]  
+            Powered by FRMU Sanjeevani
+            """)
+
+elif st.session_state.selected_page == "Closure Actions":
+    st.subheader("🔒 Action Closure Authority Panel")
+    with st.form("closure_form"):
+        st.text_input("Actioner Name")
+        st.selectbox("Department Responsible", ["Business Ops", "Legal", "HR", "IT", "Collections"])
+        st.selectbox("Action Type", [
+            "Clawback", "Recovery", "Police Complaint", "DSA Blacklisting", 
+            "Credit Bureau Suppression", "Partner Notification", 
+            "IT Tagging", "FMR Reporting"
+        ])
+        st.text_area("Action Description")
+        st.selectbox("Action Status", ["Completed", "In Progress", "Not Started", "Escalated"])
+        st.date_input("Action Start Date")
+        st.date_input("Completion Date")
+        st.file_uploader("Supporting Document(s)")
+        st.text_area("Remarks / Justification")
+        if st.selectbox("Escalation Required?", ["No", "Yes"]) == "Yes":
+            st.text_input("Escalated To")
+        st.selectbox("Verification Status", ["Verified", "Pending Verification"])
+        st.text_input("Verified By")
+        st.date_input("Verification Date")
+        st.selectbox("Notification Sent?", ["Yes", "No"])
+        st.selectbox("Final Case Status", ["Closed", "Reopened", "Under Review"])
+
+        if st.form_submit_button("Submit"):
+            st.success("Action closure submitted successfully.")
+
+elif st.session_state.selected_page == "User Admin":
+    st.subheader("👤 Admin Panel")
+    st.info("User management functionality coming soon...")
