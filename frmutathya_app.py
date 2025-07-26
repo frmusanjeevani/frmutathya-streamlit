@@ -1,5 +1,7 @@
 import streamlit as st
 import uuid
+import os
+import json
 from datetime import datetime
 
 # === USER DATABASE ===
@@ -155,7 +157,26 @@ elif st.session_state.selected_page == "Case Entry":
             if not case_id or not case_description:
                 st.warning("Please fill required fields before submitting.")
             else:
-                st.success("✅ Case submitted successfully!")
+                case_data = {
+    "case_id": st.session_state.generated_case_id,
+    "lan": st.session_state.lan,
+    "case_type": st.session_state.case_type,
+    "product": st.session_state.product,
+    "region": st.session_state.region,
+    "referred_by": st.session_state.referred_by,
+    "case_description": st.session_state.case_desc,
+    "case_date": st.session_state.case_date.strftime("%Y-%m-%d"),
+    "submitted_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+}
+
+folder_path = "data/cases"
+os.makedirs(folder_path, exist_ok=True)  # Create folder if not present
+
+file_path = os.path.join(folder_path, f"{case_data['case_id']}.json")
+with open(file_path, "w") as f:
+    json.dump(case_data, f, indent=4)
+
+st.success(f"✅ Case saved to internal path as {case_data['case_id']}.json")
 
 elif st.session_state.selected_page == "Reviewer Panel":
     st.subheader("📝 Reviewer Panel")
