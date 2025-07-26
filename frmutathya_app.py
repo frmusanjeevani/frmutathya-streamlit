@@ -143,6 +143,20 @@ elif st.session_state.selected_page == "Case Entry":
     st.date_input("Case Date", datetime.today())
     st.file_uploader("Attach Supporting Document")
 
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("💾 Save Draft"):
+            st.success("✅ Draft saved temporarily (implement logic to save if needed)")
+            # You can add actual save logic to session, file, or database here
+
+    with col2:
+        if st.button("📤 Submit Final"):
+            # Optional: Add validation checks before submission
+            if not case_id or not case_description:
+                st.warning("Please fill required fields before submitting.")
+            else:
+                st.success("✅ Case submitted successfully!")
+
 elif st.session_state.selected_page == "Reviewer Panel":
     st.subheader("📝 Reviewer Panel")
 
