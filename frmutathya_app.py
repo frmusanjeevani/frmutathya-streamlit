@@ -1,59 +1,58 @@
 import streamlit as st
-import pandas as pd
-from datetime import datetime
-import sqlite3
-import os
 
-st.set_page_config(page_title="Tathya - Case Management", page_icon="🔎", layout="centered")
+# Initialize default role if not already set
+if "role" not in st.session_state:
+    st.session_state.role = "Reviewer"  # You can change to "Admin", etc.
 
-conn = sqlite3.connect("tathya_cases.db", check_same_thread=False)
-cursor = conn.cursor()
-
-# === LOGIN STYLING & SESSION ===
+# Inject CSS for layout, login container, sidebar
 st.markdown("""
     <style>
-        body { background-color: #FFF4D9; }
-        .stButton>button {
-            background-color: #C7222A; color: white;
-            border: none; padding: 0.2rem .05rem;
-            font-weight: bold; text-transform: uppercase; font-size: 18px;
+        .login-container {
+            max-width: 300px;
+            margin: 15vh auto 0 auto;
+            background-color: #fff5e1;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
         }
-        .stButton>button:hover { background-color: #8B151B; }
-        .logo-link {
-            position: absolute; top: 5px; font-size: 18px; font-weight: bold;
-            color: #C7222A; text-decoration: none;
-        }
-        .top-left-logo { left: 10px; }
-        .top-right-logo { right: 10px; }
-        .user-role-box {
-            position: absolute; top: 70px; right: 10px;
-            background-color: #F5F5F5; padding: 4px 10px;
-            font-size: 13px; color: #333; border-radius: 4px;
-        }
-        .footer {
-            position: fixed; bottom: 5px; left: 10px;
-            font-size: 13px; color: #888; font-style: italic;
-        }
-        h1, h2, h3, .title {
-            font-family: 'Segoe UI'; color: #C7222A;
-            font-weight: bold; font-size: 24px; text-transform: uppercase;
-        
-        }
-        .css-1d391kg .css-1v0mbdj {
-            font-size: 18px !important;
-            font-weight: bold !important;
+        .menu-box {
+            background-color: #f4f4f4;
+            padding: 8px 14px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 18px;
             text-transform: uppercase;
+            transition: 0.2s ease;
+            cursor: pointer;
+        }
+        .menu-box:hover {
+            background-color: #e0e0e0;
+        }
+        .menu-active {
+            background-color: #d0d0ce !important;
         }
     </style>
-    <a href="#Dashboard" class="logo-link top-left-logo">🔎 Tathya</a>
-    <a href="https://www.adityabirlacapital.com/" target="_blank" class="logo-link top-right-logo">🏢 ABCL</a>
 """, unsafe_allow_html=True)
 
-if "role" in st.session_state:
-    st.markdown(f'<div class="user-role-box">Role: {st.session_state["role"]}</div>', unsafe_allow_html=True)
-st.markdown('<div class="footer">Powered by <strong>FRMU Sanjeevani</strong></div>', unsafe_allow_html=True)
+# === LOGIN HANDLER ===
+def login():
+    st.markdown('<div class="login-container">', unsafe_allow_html=True)
+    with st.form("login_form"):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submit = st.form_submit_button("Login")
+        if submit:
+            if username in USERS and USERS[username]["password"] == password:
+                st.session_state.authenticated = True
+                st.session_state.username = username
+                st.session_state.role = USERS[username]["role"]
+                st.rerun()
+            else:
+                st.error("Invalid credentials")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# === USERS ===
+# === USER DICTIONARY ===
 USERS = {
     "admin": {"password": "admin123", "role": "Admin"},
     "initiator": {"password": "init123", "role": "Initiator"},
@@ -63,24 +62,7 @@ USERS = {
     "closure": {"password": "closure123", "role": "Action Closure Authority"}
 }
 
-# === LOGIN ===
-def login():
-    with st.container():
-        st.markdown('<div class="login-container">', unsafe_allow_html=True)
-        with st.form("login_form"):
-            username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
-            submit = st.form_submit_button("Login")
-            if submit:
-                if username in USERS and USERS[username]["password"] == password:
-                    st.session_state.authenticated = True
-                    st.session_state.username = username
-                    st.session_state.role = USERS[username]["role"]
-                    st.rerun()
-                else:
-                    st.error("Invalid credentials")
-        st.markdown('</div>', unsafe_allow_html=True)
-
+# === AUTHENTICATION LOGIC ===
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
@@ -88,64 +70,71 @@ if not st.session_state.authenticated:
     login()
     st.stop()
 
-# === AFTER LOGIN ===
-st.sidebar.title("📁 Navigation")
-MENU_OPTIONS = ["Dashboard", "Case Entry", "Analytics"]
-if st.session_state.role == "Reviewer":
-    MENU_OPTIONS.append("Reviewer Panel")
-elif st.session_state.role == "Approver":
-    MENU_OPTIONS.append("Approver Panel")
-elif st.session_state.role == "Legal Reviewer":
-    MENU_OPTIONS.extend(["Legal - SCN", "Legal - Orders"])
-elif st.session_state.role == "Action Closure Authority":
-    MENU_OPTIONS.append("Closure Actions")
-elif st.session_state.role == "Admin":
-    MENU_OPTIONS.append("User Admin")
+# === SIDEBAR NAVIGATION ===
+st.sidebar.markdown("### 📁 Navigation")
 
-menu = st.sidebar.selectbox("SELECT PAGE", MENU_OPTIONS)
-if st.sidebar.button("🚪 LOGOUT"):
+role = st.session_state.get("role", "Reviewer")
+
+base_menu = ["Dashboard", "Case Entry", "Analytics"]
+if role == "Reviewer":
+    base_menu.append("Reviewer Panel")
+elif role == "Approver":
+    base_menu.append("Approver Panel")
+elif role == "Legal Reviewer":
+    base_menu.extend(["Legal - SCN", "Legal - Orders"])
+elif role == "Action Closure Authority":
+    base_menu.append("Closure Actions")
+elif role == "Admin":
+    base_menu.append("User Admin")
+
+# Store selected page
+if "selected_page" not in st.session_state:
+    st.session_state.selected_page = base_menu[0]
+
+# Render buttons in custom style
+for item in base_menu:
+    if st.sidebar.button(item, key=item):
+        st.session_state.selected_page = item
+
+    active_class = "menu-box menu-active" if st.session_state.selected_page == item else "menu-box"
+    st.sidebar.markdown(f'<div class="{active_class}">{item}</div>', unsafe_allow_html=True)
+
+# LOGOUT BUTTON
+if st.sidebar.button("🚪 Logout"):
     st.session_state.authenticated = False
     st.session_state.clear()
     st.rerun()
 
-st.title(f"Welcome {st.session_state.username}")
+# === MAIN CONTENT ===
+st.markdown(f"### You selected: {st.session_state.selected_page}")
 
-if menu == "Dashboard":
-    st.subheader("📊 Case Level Dashboard")
-    df = pd.read_sql("SELECT * FROM cases", conn)
-    if df.empty:
-        st.warning("No cases available.")
-    else:
-        st.dataframe(df.style.set_properties(**{
-            'background-color': '#f9f9f9',
-            'color': '#000',
-            'border-color': '#C7222A',
-            'border-width': '1px',
-            'border-style': 'solid',
-            'font-size': '14px'
-        }))
+if st.session_state.selected_page == "Dashboard":
+    st.success("📊 Dashboard placeholder")
 
-elif menu == "Analytics":
-    st.subheader("📈 Analytics")
-    st.info("Coming soon...")
+elif st.session_state.selected_page == "Case Entry":
+    st.info("📝 Case Entry form placeholder")
 
-elif menu == "Case Entry" and st.session_state.role == "Initiator":
-    st.subheader("📄 Enter New Case")
+elif st.session_state.selected_page == "Analytics":
+    st.warning("📈 Analytics coming soon...")
 
-elif menu == "Reviewer Panel" and st.session_state.role == "Reviewer":
-    st.subheader("📝 Reviewer Panel")
+elif st.session_state.selected_page == "Reviewer Panel":
+    st.info("🧑‍💼 Reviewer Panel goes here...")
 
-elif menu == "Approver Panel" and st.session_state.role == "Approver":
-    st.subheader("✅ Approver Panel")
+elif st.session_state.selected_page == "Approver Panel":
+    st.info("✅ Approver Panel goes here...")
 
-elif menu == "Legal - SCN":
+elif st.session_state.selected_page == "Legal - SCN":
     st.subheader("📄 Generate Show Cause Notice")
+    # Your SCN logic here...
 
-elif menu == "Legal - Orders":
+elif st.session_state.selected_page == "Legal - Orders":
     st.subheader("📘 Generate Reasoned Order")
+    # Your Reasoned Order logic here...
 
-elif menu == "Closure Actions":
-    st.subheader("🔒 Action Closure Authority")
+elif st.session_state.selected_page == "Closure Actions":
+    st.subheader("🔒 Action Closure Authority Panel")
+    # Your Closure form logic here...
 
-elif menu == "User Admin" and st.session_state.role == "Admin":
-    st.subheader("👤 User Management")
+elif st.session_state.selected_page == "User Admin":
+    st.subheader("👤 Admin User Management")
+    # Admin features...
