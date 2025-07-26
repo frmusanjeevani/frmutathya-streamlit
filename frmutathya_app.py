@@ -76,7 +76,7 @@ def login():
                 st.session_state.role = USERS[username]["role"]
                 st.rerun()
             else:
-                st.error("Invalid credentials")
+                st.error("🚫 Incorrect username or password. Please check your credentials and try again.")
     st.markdown('</div>', unsafe_allow_html=True)
 
 if not st.session_state.authenticated:
@@ -114,7 +114,7 @@ if st.sidebar.button("🚪 Logout"):
     st.rerun()
 
 # === MAIN CONTENT ===
-st.markdown(f"###: {st.session_state.selected_page}")
+st.markdown(f"### {st.session_state.selected_page}")
 
 if st.session_state.selected_page == "Dashboard":
     st.success("📊 Dashboard placeholder")
@@ -153,7 +153,7 @@ elif st.session_state.selected_page == "Case Entry":
     with col2:
         if st.button("📤 Submit Final"):
             if not case_id.strip() or not lan.strip() or not case_description.strip():
-                st.warning("Please fill required fields before submitting.")
+                st.warning("⚠️ Please fill all required fields (Case ID, LAN, Description) before submitting.")
             else:
                 case_data = {
                     "case_id": case_id,
@@ -174,4 +174,5 @@ elif st.session_state.selected_page == "Case Entry":
                 with open(file_path, "w") as f:
                     json.dump(case_data, f, indent=4)
 
-                st.success(f"✅ Case saved to internal path as {case_id}.json")
+                st.success(f"✅ Case saved successfully as `{case_id}.json`")
+
