@@ -76,11 +76,12 @@ USERS = {
     "admin": {"password": "admin123", "role": "Admin"},
     "initiator": {"password": "init123", "role": "Initiator"},
     "reviewer": {"password": "review123", "role": "Reviewer"},
-    "approver": {"password": "approve123", "role": "Approver"}
+    "approver": {"password": "approve123", "role": "Approver"},
+    "legal": {"password": "legal123", "role": "Legal Reviewer"},
+    "closure": {"password": "closure123", "role": "Action Closure Authority"}
 }
 
 def login():
-    st.markdown("<h1 class='title' style='text-align: center;'>Every Clue Counts</h1>", unsafe_allow_html=True)
     with st.container():
         st.markdown('<div class="login-container">', unsafe_allow_html=True)
         with st.form("login_form"):
@@ -103,3 +104,22 @@ if "authenticated" not in st.session_state:
 if not st.session_state.authenticated:
     login()
     st.stop()
+
+# Dropdown master values
+TYPE_OPTIONS = ["Lending", "Non Lending"]
+CATEGORY_OPTIONS = TYPE_OPTIONS
+REGION_OPTIONS = ["East", "North", "South", "West"]
+STATE_OPTIONS = ["Andhra Pradesh", "Assam", "Bengaluru", "Bihar", "Chattisgarh", "Chhattisgarh", "Delhi", "Ghodapada", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Odisha", "Punjab", "Raipur", "Rajasthan", "Tamil Nadu", "Telangana", "Uttar Pradesh", "Uttarakhand", "West Bengal"]
+CITY_OPTIONS = ["Agra", "Ahemdabad", "Ahmedabad", "Ajmer", "Akkalkuwa", "Akola", "Alamwala", "Aligarh", "Allahabad", "Alwar", "Ambala", "Ambernath", "Ambikapur", "Amdanga", "Amravati", "Amritsar", "Ad", "Angul", "Arambag", "Arrah", "Asansol", "Aurangabad", "Badlapur", "Badvel", "Bahadurgarh", "Balangir"]
+PRODUCT_OPTIONS = ["BL", "BTC PL", "DL", "Drop Line LOC", "Finagg", "INSTI - MORTGAGES", "LAP", "Line of Credit", "MLAP", "NA", "PL", "SEG", "SME", "STSL", "STSLP BT + Top - up", "STUL", "Term Loan", "Term Loan Infra", "Udyog Plus", "Unsecured BuyOut"]
+REFERRED_BY_OPTIONS = ["Audit Team", "Business Unit", "Collection Unit", "Compliance Team", "Credit Unit", "Customer Service", "GRT", "HR", "Legal Unit", "MD / CEO Escalation", "Operation Risk Management", "Operation Unit", "Other Function", "Policy Team", "Risk Containment Unit", "Sales Unit", "Technical Team"]
+L1_MANAGERS = ["Aditya Annamraju", "Alphanso Nagalapurkar", "AdAnthuvan Lourdusamy", "Dipesh Makawana", "Goutam Barman", "Jagruti Bane", "K Guruprasath", "Manmeet Singh", "Nishigandha Shinde", "Pramod Kumar", "Ramandeep Singh", "Rohit Shirwadkar", "Shilpy Dua", "Thiyagarajan Shanmugasundaram"]
+L2_MANAGERS = ["AdAnthuvan Lourdusamy", "Ramandeep Singh", "Rohit Shirwadkar"]
+INVESTIGATION_STATUS = ["Closed", "Pending"]
+PENDING_STAGE = ["SCN Issuance In-progress", "Stage 1 - Awaiting complete case facts/information", "Stage 3 - Investigation Under Progress (L1)", "Stage 4 - Investigation Under Progress (L2)", "Stage 5 - Awaiting NH Review/Approval for IR/FMR"]
+POLICE_STATUS = ["Filed", "Not Applicable", "Not Filed", "Pending"]
+FMR_STATUS = ["FMR Not Applicable", "Filed", "Not Applicable", "Pending"]
+HIGH_RISK_STATUS = ["NA", "Not Applicable", "Pending", "Pending with IT", "Yes"]
+APPROVER_NAMES = ["Suhas", "Ajay Kanth"]
+APPROVER_IDS = ["10001", "10002"]
+APPROVER_ROLES = ["Lead-Investigation", "Head-FRMU"]
