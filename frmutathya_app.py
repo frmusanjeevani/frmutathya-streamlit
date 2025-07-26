@@ -124,8 +124,9 @@ elif st.session_state.selected_page == "Case Entry":
     
      case_id = str(uuid.uuid4())
     st.text_input("Generated Case ID", value=case_id, disabled=True)
-    lan = st.text_input("LAN")
-    st.selectbox("Type of Case", ["Lending", "Non Lending"])
+
+lan = st.text_input("LAN")
+case_type = st.selectbox("Type of Case", ["Lending", "Non Lending"])
     
     # 🔽 New Field: Product
     st.selectbox("Product", [
