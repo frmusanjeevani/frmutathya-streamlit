@@ -170,7 +170,7 @@ elif st.session_state.selected_page == "Case Entry":
                     "submitted_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 folder_path = "data/cases"
-os.makedirs(folder_path, exist_ok=True)  # Create folder if not present
+os.makedirs(folder_path, exist_ok=True) 
 
 file_path = os.path.join(folder_path, f"{case_data['case_id']}.json")
 with open(file_path, "w") as f:
