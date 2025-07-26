@@ -16,22 +16,44 @@ st.markdown("""
         .stButton>button {
             background-color: #C7222A; color: white;
             border: none; padding: 0.4rem 1rem;
-            font-weight: 600;
+            font-weight: bold; text-transform: uppercase; font-size: 18px;
         }
         .stButton>button:hover { background-color: #8B151B; }
-        .top-left-logo { position: absolute; top: 10px; left: 10px; }
-        .top-right-logo { position: absolute; top: 10px; right: 10px; }
-        .user-role-box { position: absolute; top: 70px; right: 10px; background-color: #F5F5F5;
-            padding: 4px 10px; font-size: 13px; color: #333; border-radius: 4px; }
-        .footer { position: fixed; bottom: 5px; left: 10px; font-size: 13px;
-            color: #888; font-style: italic; }
-        h1, h2, h3, .title { font-family: 'Segoe UI'; color: #C7222A; font-weight: bold; font-size: 24px; }
-        .login-container { max-width: 400px; margin: auto; background-color: #fff5e1; padding: 2rem; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .logo-link {
+            position: absolute; top: 10px; font-size: 18px; font-weight: bold;
+            color: #C7222A; text-decoration: none;
+        }
+        .top-left-logo { left: 10px; }
+        .top-right-logo { right: 10px; }
+        .user-role-box {
+            position: absolute; top: 70px; right: 10px;
+            background-color: #F5F5F5; padding: 4px 10px;
+            font-size: 13px; color: #333; border-radius: 4px;
+        }
+        .footer {
+            position: fixed; bottom: 5px; left: 10px;
+            font-size: 13px; color: #888; font-style: italic;
+        }
+        h1, h2, h3, .title {
+            font-family: 'Segoe UI'; color: #C7222A;
+            font-weight: bold; font-size: 24px; text-transform: uppercase;
+        }
+        .login-container {
+            max-width: 400px; margin: auto;
+            background-color: #fff5e1; padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .css-1d391kg .css-1v0mbdj {
+            font-size: 18px !important;
+            font-weight: bold !important;
+            text-transform: uppercase;
+        }
     </style>
+    <a href="#Dashboard" class="logo-link top-left-logo">🔎 Tathya</a>
+    <a href="https://www.adityabirlacapital.com/" target="_blank" class="logo-link top-right-logo">🏢 ABCL</a>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="top-left-logo"><img src="https://yourdomain.com/tathya-logo.png" height="60"></div>', unsafe_allow_html=True)
-st.markdown('<div class="top-right-logo"><img src="https://yourdomain.com/abcl-logo.png" height="50"></div>', unsafe_allow_html=True)
 if "role" in st.session_state:
     st.markdown(f'<div class="user-role-box">Role: {st.session_state["role"]}</div>', unsafe_allow_html=True)
 st.markdown('<div class="footer">Powered by <strong>FRMU Sanjeevani</strong></div>', unsafe_allow_html=True)
@@ -84,14 +106,29 @@ elif st.session_state.role == "Action Closure Authority":
     MENU_OPTIONS.append("Closure Actions")
 elif st.session_state.role == "Admin":
     MENU_OPTIONS.append("User Admin")
-menu = st.sidebar.radio("Go to", MENU_OPTIONS)
+
+menu = st.sidebar.selectbox("SELECT PAGE", MENU_OPTIONS)
+if st.sidebar.button("🚪 LOGOUT"):
+    st.session_state.authenticated = False
+    st.session_state.clear()
+    st.rerun()
 
 st.title(f"Welcome {st.session_state.username}")
 
 if menu == "Dashboard":
     st.subheader("📊 Case Level Dashboard")
     df = pd.read_sql("SELECT * FROM cases", conn)
-    st.dataframe(df)
+    if df.empty:
+        st.warning("No cases available.")
+    else:
+        st.dataframe(df.style.set_properties(**{
+            'background-color': '#f9f9f9',
+            'color': '#000',
+            'border-color': '#C7222A',
+            'border-width': '1px',
+            'border-style': 'solid',
+            'font-size': '14px'
+        }))
 
 elif menu == "Analytics":
     st.subheader("📈 Analytics")
@@ -99,47 +136,21 @@ elif menu == "Analytics":
 
 elif menu == "Case Entry" and st.session_state.role == "Initiator":
     st.subheader("📄 Enter New Case")
-    # (You will implement the single-row input form here)
 
 elif menu == "Reviewer Panel" and st.session_state.role == "Reviewer":
     st.subheader("📝 Reviewer Panel")
-    # (Reviewer logic)
 
 elif menu == "Approver Panel" and st.session_state.role == "Approver":
     st.subheader("✅ Approver Panel")
-    # (Approver logic)
 
 elif menu == "Legal - SCN":
     st.subheader("📄 Generate Show Cause Notice")
-    # (Legal Show Cause form logic)
 
 elif menu == "Legal - Orders":
     st.subheader("📘 Generate Reasoned Order")
-    # (Legal Reasoned Order logic)
 
 elif menu == "Closure Actions":
     st.subheader("🔒 Action Closure Authority")
-    # (Action Closure form logic)
 
 elif menu == "User Admin" and st.session_state.role == "Admin":
     st.subheader("👤 User Management")
-    # (Admin logic to add users)
-
-# === DROPDOWN MASTER ===
-TYPE_OPTIONS = ["Lending", "Non Lending"]
-CATEGORY_OPTIONS = TYPE_OPTIONS
-REGION_OPTIONS = ["East", "North", "South", "West"]
-STATE_OPTIONS = ["Andhra Pradesh", "Assam", "Bengaluru", "Bihar", "Chattisgarh", "Chhattisgarh", "Delhi", "Ghodapada", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Odisha", "Punjab", "Raipur", "Rajasthan", "Tamil Nadu", "Telangana", "Uttar Pradesh", "Uttarakhand", "West Bengal"]
-CITY_OPTIONS = ["Agra", "Ahemdabad", "Ahmedabad", "Ajmer", "Akkalkuwa", "Akola", "Alamwala", "Aligarh", "Allahabad", "Alwar", "Ambala", "Ambernath", "Ambikapur", "Amdanga", "Amravati", "Amritsar", "Ad", "Angul", "Arambag", "Arrah", "Asansol", "Aurangabad", "Badlapur", "Badvel", "Bahadurgarh", "Balangir"]
-PRODUCT_OPTIONS = ["BL", "BTC PL", "DL", "Drop Line LOC", "Finagg", "INSTI - MORTGAGES", "LAP", "Line of Credit", "MLAP", "NA", "PL", "SEG", "SME", "STSL", "STSLP BT + Top - up", "STUL", "Term Loan", "Term Loan Infra", "Udyog Plus", "Unsecured BuyOut"]
-REFERRED_BY_OPTIONS = ["Audit Team", "Business Unit", "Collection Unit", "Compliance Team", "Credit Unit", "Customer Service", "GRT", "HR", "Legal Unit", "MD / CEO Escalation", "Operation Risk Management", "Operation Unit", "Other Function", "Policy Team", "Risk Containment Unit", "Sales Unit", "Technical Team"]
-L1_MANAGERS = ["Aditya Annamraju", "Alphanso Nagalapurkar", "AdAnthuvan Lourdusamy", "Dipesh Makawana", "Goutam Barman", "Jagruti Bane", "K Guruprasath", "Manmeet Singh", "Nishigandha Shinde", "Pramod Kumar", "Ramandeep Singh", "Rohit Shirwadkar", "Shilpy Dua", "Thiyagarajan Shanmugasundaram"]
-L2_MANAGERS = ["AdAnthuvan Lourdusamy", "Ramandeep Singh", "Rohit Shirwadkar"]
-INVESTIGATION_STATUS = ["Closed", "Pending"]
-PENDING_STAGE = ["SCN Issuance In-progress", "Stage 1 - Awaiting complete case facts/information", "Stage 3 - Investigation Under Progress (L1)", "Stage 4 - Investigation Under Progress (L2)", "Stage 5 - Awaiting NH Review/Approval for IR/FMR"]
-POLICE_STATUS = ["Filed", "Not Applicable", "Not Filed", "Pending"]
-FMR_STATUS = ["FMR Not Applicable", "Filed", "Not Applicable", "Pending"]
-HIGH_RISK_STATUS = ["NA", "Not Applicable", "Pending", "Pending with IT", "Yes"]
-APPROVER_NAMES = ["Suhas", "Ajay Kanth"]
-APPROVER_IDS = ["10001", "10002"]
-APPROVER_ROLES = ["Lead-Investigation", "Head-FRMU"]
