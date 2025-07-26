@@ -122,9 +122,7 @@ if st.session_state.selected_page == "Dashboard":
 elif st.session_state.selected_page == "Case Entry":
     st.subheader("📄 Enter New Case")
     
-     case_id = str(uuid.uuid4())
-    st.text_input("Generated Case ID", value=case_id, disabled=True)
-
+case_id = st.text_input("Case ID")
 lan = st.text_input("LAN")
 case_type = st.selectbox("Type of Case", ["Lending", "Non Lending"])
     
@@ -156,7 +154,7 @@ case_type = st.selectbox("Type of Case", ["Lending", "Non Lending"])
     
     with col2:
         if st.button("📤 Submit Final"):
-            if not case_id or not case_description:
+        if not case_id.strip() or not lan.strip() or not case_description.strip():
                 st.warning("Please fill required fields before submitting.")
             else:
  case_data = {
