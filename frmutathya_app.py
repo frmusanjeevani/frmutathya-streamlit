@@ -15,7 +15,7 @@ st.markdown("""
         body { background-color: #FFF4D9; }
         .stButton>button {
             background-color: #C7222A; color: white;
-            border: none; padding: 0.4rem 1rem;
+            border: none; padding: 0.2rem .05rem;
             font-weight: bold; text-transform: uppercase; font-size: 18px;
         }
         .stButton>button:hover { background-color: #8B151B; }
