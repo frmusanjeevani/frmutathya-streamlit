@@ -122,7 +122,9 @@ if st.session_state.selected_page == "Dashboard":
 elif st.session_state.selected_page == "Case Entry":
     st.subheader("📄 Enter New Case")
     
-    st.text_input("Case ID")
+     case_id = str(uuid.uuid4())
+    st.text_input("Generated Case ID", value=case_id, disabled=True)
+    lan = st.text_input("LAN")
     st.selectbox("Type of Case", ["Lending", "Non Lending"])
     
     # 🔽 New Field: Product
@@ -150,24 +152,22 @@ elif st.session_state.selected_page == "Case Entry":
     with col1:
         if st.button("💾 Save Draft"):
             st.success("✅ Draft saved temporarily (implement logic to save if needed)")
-            # You can add actual save logic to session, file, or database here
-
+    
     with col2:
         if st.button("📤 Submit Final"):
             if not case_id or not case_description:
                 st.warning("Please fill required fields before submitting.")
             else:
-                case_data = {
-    "case_id": st.session_state.generated_case_id,
-    "lan": st.session_state.lan,
-    "case_type": st.session_state.case_type,
-    "product": st.session_state.product,
-    "region": st.session_state.region,
-    "referred_by": st.session_state.referred_by,
-    "case_description": st.session_state.case_desc,
-    "case_date": st.session_state.case_date.strftime("%Y-%m-%d"),
-    "submitted_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-}
+ case_data = {
+                    "case_id": case_id,
+                    "lan": lan,
+                    "case_type": case_type,
+                    "product": product,
+                    "region": region,
+                    "referred_by": referred_by,
+                    "case_description": case_description,
+                    "case_date": case_date.strftime("%Y-%m-%d"),
+                    "submitted_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 folder_path = "data/cases"
 os.makedirs(folder_path, exist_ok=True)  # Create folder if not present
