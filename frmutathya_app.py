@@ -4,21 +4,12 @@ from datetime import datetime
 
 st.set_page_config(page_title="Tathya - Case Management", page_icon="🔎", layout="wide")
 
-# --- Custom CSS for ABCL Style ---
+# --- Custom CSS ---
 st.markdown("""
     <style>
-        body {
-            background-color: #FFF4D9;
-        }
-        .title {
-            font-size: 42px;
-            font-weight: bold;
-            color: #C7222A;
-        }
-        .subtitle {
-            font-size: 18px;
-            color: #231F20;
-        }
+        body { background-color: #FFF4D9; }
+        .title { font-size: 42px; font-weight: bold; color: #C7222A; }
+        .subtitle { font-size: 18px; color: #231F20; }
         .stButton>button {
             background-color: #C7222A;
             color: white;
@@ -26,20 +17,43 @@ st.markdown("""
             padding: 0.4rem 1rem;
             font-weight: 600;
         }
-        .stButton>button:hover {
-            background-color: #8B151B;
-        }
+        .stButton>button:hover { background-color: #8B151B; }
     </style>
 """, unsafe_allow_html=True)
 
+# --- Login Gate ---
+def login():
+    st.markdown('<p class="title">🔐 Login to Tathya</p>', unsafe_allow_html=True)
+    with st.form("login_form"):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        login_btn = st.form_submit_button("🔓 Login")
+
+        if login_btn:
+            if username == "admin" and password == "abcl123":
+                st.session_state.authenticated = True
+                st.rerun()
+            else:
+                st.error("❌ Invalid username or password.")
+
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+if not st.session_state.authenticated:
+    login()
+    st.stop()
+
+# --- Sidebar Menu ---
+menu = st.sidebar.radio("📁 Navigate", ["Home", "Case Entry", "Case Tracker", "Approver Panel", "About Tathya"])
+st.sidebar.button("🔒 Logout", on_click=lambda: st.session_state.update({"authenticated": False}))
+
+# --- App Content ---
 st.markdown('<p class="title">🔎 Tathya</p>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">Uncover the truth, one case at a time — ABCL Internal Platform</p>', unsafe_allow_html=True)
 st.markdown("---")
 
 if "cases" not in st.session_state:
     st.session_state.cases = []
-
-menu = st.sidebar.radio("📁 Navigate", ["Home", "Case Entry", "Case Tracker", "Approver Panel", "About Tathya"])
 
 if menu == "Home":
     st.markdown("""
@@ -50,9 +64,8 @@ if menu == "Home":
                 A secure internal platform for managing investigation cases across ABCL regions and products.
             </p>
         </div>
-        <br>
     """, unsafe_allow_html=True)
-
+    
     col1, col2, col3 = st.columns(3)
 
     with col1:
@@ -84,12 +97,12 @@ if menu == "Home":
         <h4 style='color: #231F20;'>👉 Use the left panel to access different Tathya modules.</h4>
         <br><hr>
     """, unsafe_allow_html=True)
-
+    
     st.markdown("""
         <p style="text-align: center; font-size: 14px; color: #77787B;">
             Powered by <strong>ABCL Risk & Automation</strong> | Built using <a href="https://streamlit.io" target="_blank">Streamlit</a>
         </p>
-    """, unsafe_allow_html=True)
+    """)
 
 elif menu == "Case Entry":
     st.subheader("📄 Enter New Case")
