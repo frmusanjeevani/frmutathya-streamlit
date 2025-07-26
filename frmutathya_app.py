@@ -1,12 +1,10 @@
-""import streamlit as st
+import streamlit as st
 import pandas as pd
 from datetime import datetime
 import sqlite3
 
-# --- Config ---
 st.set_page_config(page_title="Tathya - Case Management", page_icon="🔎", layout="wide")
 
-# --- Database Init ---
 conn = sqlite3.connect("/mnt/data/tathya_cases.db", check_same_thread=False)
 cursor = conn.cursor()
 cursor.execute("""
@@ -39,7 +37,6 @@ cursor.execute("""
 """)
 conn.commit()
 
-# --- Style ---
 st.markdown("""
     <style>
         body { background-color: #FFF4D9; }
@@ -64,14 +61,12 @@ if "role" in st.session_state:
     st.markdown(f'<div class="user-role-box">Role: {st.session_state["role"]}</div>', unsafe_allow_html=True)
 st.markdown('<div class="footer">Powered by <strong>FRMU Sanjeevani</strong></div>', unsafe_allow_html=True)
 
-# --- Users ---
 USERS = {
     "admin": {"password": "admin123", "role": "Initiator"},
     "reviewer": {"password": "review123", "role": "Reviewer"},
     "approver": {"password": "approve123", "role": "Approver"}
 }
 
-# --- Login ---
 def login():
     st.title("🔐 Tathya Login")
     with st.form("login_form"):
@@ -94,26 +89,22 @@ if not st.session_state.authenticated:
     login()
     st.stop()
 
-# --- Session Init ---
 role = st.session_state.get("role")
 menu = st.sidebar.radio("📁 Menu", ["Dashboard", "Analytics", "Case Entry", "Reviewer Panel", "Approver Panel"])
 st.sidebar.markdown("<br><br>", unsafe_allow_html=True)
 st.sidebar.button("Logout", on_click=lambda: st.session_state.update({"authenticated": False}))
 
-# --- Masters ---
 reviewer_l1 = ["Aditya Annamraju", "Alphanso Nagalapurkar", "AdAnthuvan Lourdusamy", "Dipesh Makawana", "Goutam Barman", "Jagruti Bane", "K Guruprasath", "Manmeet Singh", "Pramod Kumar", "Ramandeep Singh", "Rohit Shirwadkar", "Shilpy Dua", "Thiyagarajan Shanmugasundaram"]
 reviewer_l2 = ["AdAnthuvan Lourdusamy", "Manmeet Singh", "Ramandeep Singh", "Rohit Shirwadkar", "Suhas Bhalerao"]
 approvers = ["Suhas", "Ajay Kanth"]
 approver_ids = ["10001", "10002"]
 approver_roles = ["Lead-Investigation", "Head-FRMU"]
 
-# --- Dashboard ---
 if menu == "Dashboard":
     st.title("📊 Case Level Dashboard")
     df = pd.read_sql("SELECT * FROM cases", conn)
     st.dataframe(df)
 
-# --- Case Entry ---
 elif menu == "Case Entry" and role == "Initiator":
     st.subheader("📄 Enter New Case")
     with st.form("case_form"):
@@ -145,7 +136,6 @@ elif menu == "Case Entry" and role == "Initiator":
             else:
                 st.error("All required fields must be filled")
 
-# --- Reviewer Panel ---
 elif menu == "Reviewer Panel" and role == "Reviewer":
     st.subheader("🔍 Reviewer Case View")
     df = pd.read_sql("SELECT * FROM cases", conn)
@@ -174,7 +164,6 @@ elif menu == "Reviewer Panel" and role == "Reviewer":
                 conn.commit()
                 st.success("✅ Review submitted")
 
-# --- Approver Panel ---
 elif menu == "Approver Panel" and role == "Approver":
     st.subheader("🔐 Approver Panel")
     df = pd.read_sql("SELECT * FROM cases", conn)
@@ -197,7 +186,6 @@ elif menu == "Approver Panel" and role == "Approver":
                 conn.commit()
                 st.success(f"✅ Approved case {selected}")
 
-# --- Analytics Placeholder ---
 elif menu == "Analytics":
     st.subheader("📈 Analytics")
     st.info("Analytics will be added soon with charts and KPIs.")
