@@ -1,4 +1,5 @@
 import streamlit as st
+import uuid
 from datetime import datetime
 
 # === USER DATABASE ===
