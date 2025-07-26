@@ -5,7 +5,7 @@ import sqlite3
 
 st.set_page_config(page_title="Tathya - Case Management", page_icon="🔎", layout="wide")
 
-conn = sqlite3.connect("/mnt/data/tathya_cases.db", check_same_thread=False)
+conn = sqlite3.connect("tathya_cases.db", check_same_thread=False)
 cursor = conn.cursor()
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS cases (
@@ -127,7 +127,10 @@ elif menu == "Case Entry" and role == "Initiator":
             referred_by = st.text_input("Referred By")
         submitted = st.form_submit_button("Submit Case")
         if submitted:
-            if case_id and customer:
+            cursor.execute("SELECT 1 FROM cases WHERE case_id = ?", (case_id,))
+            if cursor.fetchone():
+                st.error("⚠️ Case ID already exists.")
+            elif case_id and customer:
                 cursor.execute("""
                     INSERT INTO cases VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', '', '', '', '', '', '', '', '', '')
                 """, (case_id, customer, case_type, region, category, state, city, product, referred_by, loan_amt, fraud_loss, recovery, str(date), description))
