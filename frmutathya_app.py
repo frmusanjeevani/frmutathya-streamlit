@@ -1,9 +1,43 @@
-import streamlit as st
+""import streamlit as st
 import pandas as pd
 from datetime import datetime
+import sqlite3
 
 # --- Config ---
 st.set_page_config(page_title="Tathya - Case Management", page_icon="🔎", layout="wide")
+
+# --- Database Init ---
+conn = sqlite3.connect("/mnt/data/tathya_cases.db", check_same_thread=False)
+cursor = conn.cursor()
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS cases (
+        case_id TEXT PRIMARY KEY,
+        customer TEXT,
+        type TEXT,
+        region TEXT,
+        category TEXT,
+        state TEXT,
+        city TEXT,
+        product TEXT,
+        referred_by TEXT,
+        loan_amount REAL,
+        fraud_loss REAL,
+        recovery REAL,
+        date TEXT,
+        description TEXT,
+        reviewer_cat TEXT,
+        reviewer_fraud_type TEXT,
+        reviewer_l1_mgr TEXT,
+        reviewer_l2_mgr TEXT,
+        reviewer_status TEXT,
+        reviewer_pending_stage TEXT,
+        reviewer_remarks TEXT,
+        approver_name TEXT,
+        approver_id TEXT,
+        approver_role TEXT
+    )
+""")
+conn.commit()
 
 # --- Style ---
 st.markdown("""
@@ -15,31 +49,19 @@ st.markdown("""
             font-weight: 600;
         }
         .stButton>button:hover { background-color: #8B151B; }
-        .top-left-logo {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-        }
-        .top-right-logo {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-        }
-        .footer {
-            position: fixed;
-            bottom: 5px;
-            width: 100%;
-            text-align: center;
-            font-size: 13px;
-            color: #888;
-            font-style: italic;
-        }
+        .top-left-logo { position: absolute; top: 10px; left: 10px; }
+        .top-right-logo { position: absolute; top: 10px; right: 10px; }
+        .user-role-box { position: absolute; top: 70px; right: 10px; background-color: #F5F5F5;
+            padding: 4px 10px; font-size: 13px; color: #333; border-radius: 4px; }
+        .footer { position: fixed; bottom: 5px; width: 100%; text-align: center; font-size: 13px;
+            color: #888; font-style: italic; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- Global UI Elements ---
 st.markdown('<div class="top-left-logo"><img src="https://yourdomain.com/tathya-logo.png" height="60"></div>', unsafe_allow_html=True)
 st.markdown('<div class="top-right-logo"><img src="https://yourdomain.com/abcl-logo.png" height="50"></div>', unsafe_allow_html=True)
+if "role" in st.session_state:
+    st.markdown(f'<div class="user-role-box">Role: {st.session_state["role"]}</div>', unsafe_allow_html=True)
 st.markdown('<div class="footer">Powered by <strong>FRMU Sanjeevani</strong></div>', unsafe_allow_html=True)
 
 # --- Users ---
@@ -56,13 +78,11 @@ def login():
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
         submit = st.form_submit_button("Login")
-
         if submit:
             if username in USERS and USERS[username]["password"] == password:
                 st.session_state.authenticated = True
                 st.session_state.username = username
                 st.session_state.role = USERS[username]["role"]
-                st.success(f"Welcome, {username}!")
                 st.rerun()
             else:
                 st.error("Invalid credentials")
@@ -74,28 +94,24 @@ if not st.session_state.authenticated:
     login()
     st.stop()
 
-# --- Main App ---
+# --- Session Init ---
 role = st.session_state.get("role")
-menu = st.sidebar.radio("📁 Navigate", ["Home", "Case Entry", "Reviewer Panel", "Approver Panel"])
+menu = st.sidebar.radio("📁 Menu", ["Dashboard", "Analytics", "Case Entry", "Reviewer Panel", "Approver Panel"])
+st.sidebar.markdown("<br><br>", unsafe_allow_html=True)
 st.sidebar.button("Logout", on_click=lambda: st.session_state.update({"authenticated": False}))
 
-# --- Session Storage ---
-if "cases" not in st.session_state:
-    st.session_state.cases = []
-
-# --- Dummy Masters ---
+# --- Masters ---
 reviewer_l1 = ["Aditya Annamraju", "Alphanso Nagalapurkar", "AdAnthuvan Lourdusamy", "Dipesh Makawana", "Goutam Barman", "Jagruti Bane", "K Guruprasath", "Manmeet Singh", "Pramod Kumar", "Ramandeep Singh", "Rohit Shirwadkar", "Shilpy Dua", "Thiyagarajan Shanmugasundaram"]
 reviewer_l2 = ["AdAnthuvan Lourdusamy", "Manmeet Singh", "Ramandeep Singh", "Rohit Shirwadkar", "Suhas Bhalerao"]
 approvers = ["Suhas", "Ajay Kanth"]
 approver_ids = ["10001", "10002"]
 approver_roles = ["Lead-Investigation", "Head-FRMU"]
 
-# --- Home ---
-if menu == "Home":
-    st.markdown("""
-        <h1 style='color:#C7222A;'>🔎 Welcome to Tathya</h1>
-        <p style='font-size:18px;'>Case Management Platform - Role: <strong>{}</strong></p>
-    """.format(role), unsafe_allow_html=True)
+# --- Dashboard ---
+if menu == "Dashboard":
+    st.title("📊 Case Level Dashboard")
+    df = pd.read_sql("SELECT * FROM cases", conn)
+    st.dataframe(df)
 
 # --- Case Entry ---
 elif menu == "Case Entry" and role == "Initiator":
@@ -118,27 +134,13 @@ elif menu == "Case Entry" and role == "Initiator":
             city = st.text_input("City")
             product = st.text_input("Product")
             referred_by = st.text_input("Referred By")
-
         submitted = st.form_submit_button("Submit Case")
         if submitted:
             if case_id and customer:
-                new_case = {
-                    "Case ID": case_id,
-                    "Customer": customer,
-                    "Type": case_type,
-                    "Region": region,
-                    "Category": category,
-                    "State": state,
-                    "City": city,
-                    "Product": product,
-                    "Referred By": referred_by,
-                    "Loan Amount": loan_amt,
-                    "Fraud Loss": fraud_loss,
-                    "RCU Recovery": recovery,
-                    "Date": str(date),
-                    "Description": description
-                }
-                st.session_state.cases.append(new_case)
+                cursor.execute("""
+                    INSERT INTO cases VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', '', '', '', '', '', '', '', '', '')
+                """, (case_id, customer, case_type, region, category, state, city, product, referred_by, loan_amt, fraud_loss, recovery, str(date), description))
+                conn.commit()
                 st.success("✅ Case added successfully")
             else:
                 st.error("All required fields must be filled")
@@ -146,13 +148,13 @@ elif menu == "Case Entry" and role == "Initiator":
 # --- Reviewer Panel ---
 elif menu == "Reviewer Panel" and role == "Reviewer":
     st.subheader("🔍 Reviewer Case View")
-    if not st.session_state.cases:
-        st.warning("No cases to review")
+    df = pd.read_sql("SELECT * FROM cases", conn)
+    if df.empty:
+        st.warning("No cases available")
     else:
-        selected = st.selectbox("Select Case", [c["Case ID"] for c in st.session_state.cases])
-        case = next(c for c in st.session_state.cases if c["Case ID"] == selected)
-        st.json(case)  # Read-only view for now
-
+        selected = st.selectbox("Select Case", df["case_id"])
+        selected_case = df[df["case_id"] == selected].iloc[0]
+        st.json(selected_case.to_dict())
         st.markdown("---")
         st.markdown("### 📝 Reviewer Inputs")
         with st.form("reviewer_form"):
@@ -165,24 +167,37 @@ elif menu == "Reviewer Panel" and role == "Reviewer":
             remarks = st.text_area("Investigation Remarks")
             submit = st.form_submit_button("Submit Review")
             if submit:
-                st.success("✅ Reviewer input saved")
+                cursor.execute("""
+                    UPDATE cases SET reviewer_cat=?, reviewer_fraud_type=?, reviewer_l1_mgr=?, reviewer_l2_mgr=?,
+                    reviewer_status=?, reviewer_pending_stage=?, reviewer_remarks=? WHERE case_id=?
+                """, (cat, fraud_type, l1_mgr, l2_mgr, status, pending_stage, remarks, selected))
+                conn.commit()
+                st.success("✅ Review submitted")
 
 # --- Approver Panel ---
 elif menu == "Approver Panel" and role == "Approver":
     st.subheader("🔐 Approver Panel")
-    if not st.session_state.cases:
+    df = pd.read_sql("SELECT * FROM cases", conn)
+    if df.empty:
         st.warning("No cases to approve")
     else:
-        selected = st.selectbox("Select Case to Approve", [c["Case ID"] for c in st.session_state.cases])
-        case = next(c for c in st.session_state.cases if c["Case ID"] == selected)
-        st.json(case)
-
-        st.markdown("---")
+        selected = st.selectbox("Select Case", df["case_id"])
+        selected_case = df[df["case_id"] == selected].iloc[0]
+        st.json(selected_case.to_dict())
         st.markdown("### ✅ Approval Form")
         with st.form("approver_form"):
             name = st.selectbox("Approved by Name", approvers)
             aid = st.selectbox("Approved by ID", approver_ids)
-            role = st.selectbox("Approved by Role", approver_roles)
+            arole = st.selectbox("Approved by Role", approver_roles)
             submit = st.form_submit_button("Submit Approval")
             if submit:
-                st.success(f"✅ Case {selected} approved by {name} ({role})")
+                cursor.execute("""
+                    UPDATE cases SET approver_name=?, approver_id=?, approver_role=? WHERE case_id=?
+                """, (name, aid, arole, selected))
+                conn.commit()
+                st.success(f"✅ Approved case {selected}")
+
+# --- Analytics Placeholder ---
+elif menu == "Analytics":
+    st.subheader("📈 Analytics")
+    st.info("Analytics will be added soon with charts and KPIs.")
