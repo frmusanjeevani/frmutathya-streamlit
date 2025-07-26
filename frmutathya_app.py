@@ -8,44 +8,8 @@ st.set_page_config(page_title="Tathya - Case Management", page_icon="🔎", layo
 
 conn = sqlite3.connect("tathya_cases.db", check_same_thread=False)
 cursor = conn.cursor()
-cursor.execute("""
-    CREATE TABLE IF NOT EXISTS cases (
-        case_id TEXT PRIMARY KEY,
-        customer TEXT,
-        type TEXT,
-        region TEXT,
-        category TEXT,
-        state TEXT,
-        city TEXT,
-        product TEXT,
-        referred_by TEXT,
-        loan_amount REAL,
-        fraud_loss REAL,
-        recovery REAL,
-        date TEXT,
-        description TEXT,
-        document_path TEXT,
-        reviewer_cat TEXT,
-        reviewer_fraud_type TEXT,
-        reviewer_l1_mgr TEXT,
-        reviewer_l2_mgr TEXT,
-        reviewer_status TEXT,
-        reviewer_pending_stage TEXT,
-        reviewer_remarks TEXT,
-        approver_name TEXT,
-        approver_id TEXT,
-        approver_role TEXT
-    )
-""")
-cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        username TEXT PRIMARY KEY,
-        password TEXT,
-        role TEXT
-    )
-""")
-conn.commit()
 
+# === LOGIN STYLING & SESSION ===
 st.markdown("""
     <style>
         body { background-color: #FFF4D9; }
@@ -72,6 +36,7 @@ if "role" in st.session_state:
     st.markdown(f'<div class="user-role-box">Role: {st.session_state["role"]}</div>', unsafe_allow_html=True)
 st.markdown('<div class="footer">Powered by <strong>FRMU Sanjeevani</strong></div>', unsafe_allow_html=True)
 
+# === USERS ===
 USERS = {
     "admin": {"password": "admin123", "role": "Admin"},
     "initiator": {"password": "init123", "role": "Initiator"},
@@ -81,6 +46,7 @@ USERS = {
     "closure": {"password": "closure123", "role": "Action Closure Authority"}
 }
 
+# === LOGIN ===
 def login():
     with st.container():
         st.markdown('<div class="login-container">', unsafe_allow_html=True)
@@ -105,7 +71,61 @@ if not st.session_state.authenticated:
     login()
     st.stop()
 
-# Dropdown master values
+# === AFTER LOGIN ===
+st.sidebar.title("📁 Navigation")
+MENU_OPTIONS = ["Dashboard", "Case Entry", "Analytics"]
+if st.session_state.role == "Reviewer":
+    MENU_OPTIONS.append("Reviewer Panel")
+elif st.session_state.role == "Approver":
+    MENU_OPTIONS.append("Approver Panel")
+elif st.session_state.role == "Legal Reviewer":
+    MENU_OPTIONS.extend(["Legal - SCN", "Legal - Orders"])
+elif st.session_state.role == "Action Closure Authority":
+    MENU_OPTIONS.append("Closure Actions")
+elif st.session_state.role == "Admin":
+    MENU_OPTIONS.append("User Admin")
+menu = st.sidebar.radio("Go to", MENU_OPTIONS)
+
+st.title(f"Welcome {st.session_state.username}")
+
+if menu == "Dashboard":
+    st.subheader("📊 Case Level Dashboard")
+    df = pd.read_sql("SELECT * FROM cases", conn)
+    st.dataframe(df)
+
+elif menu == "Analytics":
+    st.subheader("📈 Analytics")
+    st.info("Coming soon...")
+
+elif menu == "Case Entry" and st.session_state.role == "Initiator":
+    st.subheader("📄 Enter New Case")
+    # (You will implement the single-row input form here)
+
+elif menu == "Reviewer Panel" and st.session_state.role == "Reviewer":
+    st.subheader("📝 Reviewer Panel")
+    # (Reviewer logic)
+
+elif menu == "Approver Panel" and st.session_state.role == "Approver":
+    st.subheader("✅ Approver Panel")
+    # (Approver logic)
+
+elif menu == "Legal - SCN":
+    st.subheader("📄 Generate Show Cause Notice")
+    # (Legal Show Cause form logic)
+
+elif menu == "Legal - Orders":
+    st.subheader("📘 Generate Reasoned Order")
+    # (Legal Reasoned Order logic)
+
+elif menu == "Closure Actions":
+    st.subheader("🔒 Action Closure Authority")
+    # (Action Closure form logic)
+
+elif menu == "User Admin" and st.session_state.role == "Admin":
+    st.subheader("👤 User Management")
+    # (Admin logic to add users)
+
+# === DROPDOWN MASTER ===
 TYPE_OPTIONS = ["Lending", "Non Lending"]
 CATEGORY_OPTIONS = TYPE_OPTIONS
 REGION_OPTIONS = ["East", "North", "South", "West"]
