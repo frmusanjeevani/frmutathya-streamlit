@@ -117,26 +117,11 @@ if st.sidebar.button("🚪 Logout"):
 st.markdown(f"###: {st.session_state.selected_page}")
 
 if st.session_state.selected_page == "Dashboard":
-    st.subheader("📊 Submitted Cases")
+    st.success("📊 Dashboard placeholder")
 
 elif st.session_state.selected_page == "Case Entry":
     st.subheader("📄 Enter New Case")
-   folder_path = "data/cases"
-    if not os.path.exists(folder_path):
-        st.info("No cases submitted yet.")
-    else:
-        case_files = [f for f in os.listdir(folder_path) if f.endswith(".json")]
-        all_cases = []
 
-        for file in case_files:
-            with open(os.path.join(folder_path, file), "r") as f:
-                case_data = json.load(f)
-                all_cases.append(case_data)
-
-        if all_cases:
-            st.dataframe(all_cases, use_container_width=True)
-        else:
-            st.info("No case data available.")
     case_id = st.text_input("Case ID")
     lan = st.text_input("LAN")
     case_type = st.selectbox("Type of Case", ["Lending", "Non Lending"])
