@@ -111,7 +111,7 @@ if st.sidebar.button("🚪 Logout"):
     st.rerun()
 
 # === MAIN CONTENT ===
-st.markdown(f"### You selected: {st.session_state.selected_page}")
+st.markdown(f"### : {st.session_state.selected_page}")
 
 if st.session_state.selected_page == "Dashboard":
     st.success("📊 Dashboard placeholder")
