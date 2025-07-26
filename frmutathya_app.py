@@ -39,7 +39,7 @@ st.markdown("""
             font-weight: bold; font-size: 24px; text-transform: uppercase;
         }
         .login-container {
-            max-width: 400px; margin: auto;
+            max-width: 200px; margin: auto;
             background-color: #fff5e1; padding: 2rem;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
