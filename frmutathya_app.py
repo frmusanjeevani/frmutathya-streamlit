@@ -20,7 +20,7 @@ st.markdown("""
         }
         .stButton>button:hover { background-color: #8B151B; }
         .logo-link {
-            position: absolute; top: 30px; font-size: 18px; font-weight: bold;
+            position: absolute; top: 5px; font-size: 18px; font-weight: bold;
             color: #C7222A; text-decoration: none;
         }
         .top-left-logo { left: 10px; }
