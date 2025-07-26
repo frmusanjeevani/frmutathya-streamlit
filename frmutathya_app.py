@@ -120,29 +120,7 @@ if st.session_state.selected_page == "Dashboard":
     st.success("📊 Dashboard placeholder")
 
 elif st.session_state.selected_page == "Case Entry":
-if st.session_state.selected_page == "Dashboard":
-    st.subheader("📊 All Submitted Cases")
-
-    folder_path = "data/cases"
-    if not os.path.exists(folder_path):
-        st.info("No cases submitted yet.")
-    else:
-        case_files = [f for f in os.listdir(folder_path) if f.endswith(".json")]
-        all_cases = []
-
-        for file in case_files:
-            file_path = os.path.join(folder_path, file)
-            with open(file_path, "r") as f:
-                case_data = json.load(f)
-                all_cases.append(case_data)
-
-        if all_cases:
-            import pandas as pd
-            df = pd.DataFrame(all_cases)
-            df = df.sort_values("submitted_at", ascending=False)
-            st.dataframe(df, use_container_width=True)
-        else:
-            st.info("No data available yet.")
+    st.subheader("📄 Enter New Case")
 
     case_id = st.text_input("Case ID")
     lan = st.text_input("LAN")
